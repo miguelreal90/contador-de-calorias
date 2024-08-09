@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { categories } from "../data/categories"
+import { Activity } from "../types"
 export default function Form() {
-    const [activity,setActivity]=useState({
+    const [activity,setActivity]=useState<Activity>({
         category:1,
         name:'',
         calories:0
@@ -9,9 +10,12 @@ export default function Form() {
 
 
     })
-    const hundleChange =(e) => {
+    const hundleChange =(e: React.ChangeEvent<HTMLSelectElement>|React.ChangeEvent<HTMLInputElement>) => {
+        const isNumberField =['category','calories'].includes(e.target.id)//retorma true si estan category o calories
+        console.log(isNumberField);
+        
         setActivity({
-            ...activity,[e.target.id]:e.target.value
+            ...activity,[e.target.id]:isNumberField?+e.target.value:e.target.value//para convertir a numero antes de setear
         })
         
     }
@@ -19,6 +23,7 @@ export default function Form() {
         <form 
         className=" space-y-5 bg-white shadow p-10 rounded-lg"
         >
+            
             <div className=" grid grid-cols-1 gap-3">
                 <label htmlFor="category" className=" font-bold">Categoria</label>
                 <select 
