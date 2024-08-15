@@ -1,27 +1,51 @@
-import { useState } from "react"
+import { Dispatch, useEffect, useState } from "react"
 import { categories } from "../data/categories"
+import {v4 as uuidv4} from 'uuid'
 import { Activity } from "../types"
-export default function Form() {
-    const [activity,setActivity]=useState<Activity>({
+import { ActivityAntions, ActivityState } from "../reducers/activity-reducer"
+type FormProps ={
+    dispatch:Dispatch<ActivityAntions>
+    state: ActivityState
+}
+const initialState:Activity = {
+        id:uuidv4(),
         category:1,
         name:'',
         calories:0
-
-
-
-    })
+    }
+export default function Form({dispatch,state}:FormProps) {
+    const [activity,setActivity]=useState<Activity>(initialState)
+    useEffect(()=>{
+        if (state.activeId) {
+            const selectedActivity=state.activities.filter(stateActivity=>stateActivity.id===state.activeId)[0]
+            setActivity(selectedActivity)
+        }
+    },[state.activeId])
     const hundleChange =(e: React.ChangeEvent<HTMLSelectElement>|React.ChangeEvent<HTMLInputElement>) => {
         const isNumberField =['category','calories'].includes(e.target.id)//retorma true si estan category o calories
-        console.log(isNumberField);
+        //console.log(isNumberField);
         
         setActivity({
             ...activity,[e.target.id]:isNumberField?+e.target.value:e.target.value//para convertir a numero antes de setear
         })
         
     }
+    const isValidActivity = () => { 
+        const {name,calories} = activity
+        return name.trim()!=='' && calories>0
+    }
+      // Determina el texto del botón basado en la categoría seleccionada
+    const buttonText = activity.category === 1 ? "Guardar Comida" : "Guardar Ejercicio"
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => { 
+        e.preventDefault()
+        dispatch({type:'save-activity',playload:{newActivity:activity}})
+        setActivity({...initialState,id:uuidv4()})
+        
+    }
     return (
         <form 
         className=" space-y-5 bg-white shadow p-10 rounded-lg"
+        onSubmit={handleSubmit}
         >
             
             <div className=" grid grid-cols-1 gap-3">
@@ -68,8 +92,9 @@ export default function Form() {
                 />
                 <input 
                 type="submit" 
-                className=" bg-gray-800 hover:bg-gray-900 w-full p-2 font-bold uppercase text-white cursor-pointer"
-                value={'Guardar Comida o Guardar Ejercicio'}
+                className=" bg-gray-800 hover:bg-gray-900 w-full p-2 font-bold uppercase text-white cursor-pointer disabled:opacity-10"
+                value={buttonText}
+                disabled={!isValidActivity()}
                 />
             </div>
         </form>
